@@ -1,0 +1,102 @@
+//app.js
+
+require('dotenv').config();
+
+const express = require('express');
+const app = express();
+
+const connectDB = require('./config/db');
+const path = require ('path');
+const http = require ('http');
+
+
+// NEW: security libs
+const cors = require("cors");
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
+
+const authRoutes = require('./routes/authRoutes');
+
+//DB connection
+connectDB();
+
+//Middleware to parse JSON
+// Increase payload limit
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+// Security hardening
+//helmet
+app.use(
+  helmet.contentSecurityPolicy({
+    useDefaults: true,
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "https://cdn.jsdelivr.net",
+        "https://cdn.socket.io",   // allow socket.io CDN
+      ],
+      workerSrc: ["'self'", "blob:"],
+      childSrc: ["'self'", "blob:"],
+      connectSrc: [
+        "'self'",
+        "blob:",
+        "data:",
+        "https://cdn.jsdelivr.net",   // allow worker importScripts
+        "https://cdn.socket.io",
+        "http://localhost:5000",
+        "https://onrender.com",
+        "https://res.cloudinary.com"
+      ],
+      imgSrc: [
+        "'self'", 
+        "data:", 
+        "blob:", 
+        "http://localhost:5000", 
+        "https://onrender.com", 
+        "https://res.cloudinary.com"
+      ], // FIX: allow blob: images
+    },
+  })
+);
+
+
+//ratelimit
+const limiter = rateLimit({ 
+windowMs: 15 * 60 * 1000, // 15 minutes 
+max: 100, // max 100 requests per IP 
+message: 'Too many requests from this IP, please try again later.' 
+}); 
+app.use('/api', limiter);
+
+
+
+// CORS configuration
+const allowedOrigins = [
+  'http://localhost:5000',   // If frontend serves on 5000
+  'null', //To allow frontend guys to work freely for now
+  //'https://vephla-productivity-suite-crl2.onrender.com', //deployed backend 
+  //'https://netlify.app'  // deployed frontend  
+  ]; 
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+
+//Routes
+app.use('/api/auth', authRoutes);
+
+
+module.exports = app;
