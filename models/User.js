@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
 		type: String,
 		required: true,
 		unique: true,
+		lowercase: true,
 		trim: true
 	},
 	password: {
@@ -71,9 +72,10 @@ const userSchema = new mongoose.Schema({
 			maxlength: 11,
 			validate: {
 				validator: function (v) {
-					return /^[0-9]{11}$/.test(v);  // only 11 digits allowed
+					// E.164 format: + and up to 15 digits
+		    		return /^\+[1-9]\d{6,14}$/.test(v); // using +234
 				},
-				message: "Phone number must be exactly 11 digits"
+				message: "Phone number must be in international format, e.g. +2348012345678"
 			}
 		},
 

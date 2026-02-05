@@ -17,6 +17,9 @@ const rateLimit = require('express-rate-limit');
 
 
 const authRoutes = require('./routes/authRoutes');
+const reportRoutes = require('./routes/reportRoutes');
+
+const { swaggerUi, swaggerSpec } = require('./swagger');
 
 //DB connection
 connectDB();
@@ -96,7 +99,10 @@ app.use(cors({
 
 
 //Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v2', reportRoutes);
 
+// Swagger docs route
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 module.exports = app;

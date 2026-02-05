@@ -65,7 +65,7 @@ exports.forgotPassOtpEmail = async (to, otp) => {
       <div style="font-family: 'Segoe UI', sans-serif; background-color: #f5f7fa; padding: 30px;">
         <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
           <div style="background: #009900; color: white; text-align: center; padding: 25px 10px;">
-            <h1 style="margin: 0; font-size: 24px;">Vephla Productivity Suite</h1>
+            <h1 style="margin: 0; font-size: 24px;">Trash Beta</h1>
             <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.9;">Password Reset Link</p>
           </div>
 
@@ -112,3 +112,50 @@ exports.forgotPassOtpEmail = async (to, otp) => {
 };
 
 
+
+exports.notificationEmail = async ({ to, subject, html }) => {
+  try {
+    const htmlContent = `
+      <div style="font-family: 'Segoe UI', sans-serif; background-color: #f5f7fa; padding: 30px;">
+        <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="background: #009900; color: white; text-align: center; padding: 25px 10px;">
+            <h1 style="margin: 0; font-size: 24px;">Trash Beta</h1>
+            <p style="margin: 5px 0 0; font-size: 14px; opacity: 0.9;">Notification</p>
+          </div>
+
+          <div style="padding: 30px; color: #333;">
+            <p style="font-size: 16px;">Hi there 👋,</p>
+          
+
+            <div style="text-align: center; margin: 30px 0;">
+              <div style="display: inline-block; background: #009900; color: white; padding: 14px 30px; border-radius: 8px; font-size: 22px; letter-spacing: 4px; font-weight: bold;">
+                ${subject}
+              </div>
+            </div>
+
+            
+          </div>
+
+          <div style="background: #f0f4f8; text-align: center; padding: 15px; font-size: 12px; color: #888;">
+            © ${new Date().getFullYear()} Trash Beta. All rights reserved.<br/>
+            <a href="https://onrender.com" style="color: #009900; text-decoration: none;">Visit Website</a>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const data = await resend.emails.send({
+      from: process.env.FROM_EMAIL, // no-reply@medcheck.store
+      to,
+      subject: "TrashBeta Notification",
+      html: htmlContent
+    });
+
+    //console.log(`✅ OTP email sent to ${to}: ${otp}`);
+    //console.log("Resend response:", data);
+    return data;
+  } catch (err) {
+    console.error("❌ Error sending OTP email:", err);
+    throw err;
+  }
+};

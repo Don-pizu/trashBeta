@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 const { sendOtpEmail, forgotPassOtpEmail } = require('../utils/emailService');
 const cloudinary = require('../config/cloudinary');
 const fs = require('fs')
+const {formatPhone } = require('../utils/phoneFormatter');
 
 
 //POST 		Register a new user
@@ -192,13 +193,21 @@ exports.updateProfile = async (req, res) => {
 
 		const userId = req.user.id;
 
-		const {
+		let {
 			phone, locationArea, cityLGA,
 			address, pickupReminder, notificationChannel
 		} = req.body;
 
 		if(!phone)
 			return res.status(400).json({ message: 'Phone number is required'});
+
+		// Format phone number before saving
+    phone = formatPhone(phone);
+
+    const allowedNotification = ['EMAIL', 'SMS'];
+
+    if (notificationChannel && !allowedNotification.includes(notificationChannel))
+    	return res.status(404).json({ message: `Allowed notification channels are: ${allowedNotification}`});
 
 		if( req.user.onboardingStep === 'PROFILE_COMPLETED' )
 			return res.status(404).json({ message: 'User has completed the onboarding' });
@@ -417,6 +426,86 @@ exports.resetPassword = async (req, res) => {
 };
 
 
+//PUT Update user details
+exports.updateUserDetails = async (req, res) => {
+	try {
+
+		const userId = req.user.id;
+
+		const { firstName, lastName, role, 
+						phone, locationArea, cityLGA, 
+						address, notificationChannel
+					} = req.body;
+
+		//Allowed role
+		const allowedRole = ['resident', 'staff', 'admin'];
+
+		if (role && !allowedRole.includes(role))
+			return res.status(404).json({ message: 'Role is not allowed'});
+		
+		if (role && req.user.role !== 'admin') 
+  		return res.status(403).json({ message: 'Only admin can update role' });
+		
+		const allowedNotification = ['EMAIL', 'SMS'];
+		if (notificationChannel && !allowedNotification.includes(notificationChannel))
+			return res.status(404).json({ message: `Allowed notification channels are: ${allowedNotification}`});
+
+		
+
+		const updateRoot = {};
+		const updateProfile = {};
+
+		if (firstName) updateRoot.firstName = firstName;
+		if (lastName) updateRoot.lastName = lastName;
+		if (role) updateRoot.role = role;
+
+		if (phone) updateProfile.phone = formatPhone(phone);
+		if (locationArea) updateProfile.locationArea = locationArea;
+		if (cityLGA) updateProfile.cityLGA = cityLGA;
+		if (address) updateProfile.address = address;
+		if (notificationChannel) updateProfile.notificationChannel = notificationChannel;
+
+		if (req.file) {
+			updateProfile.avatar = req.file.path;
+		}
+
+		//find user and update
+		const user = await User.findByIdAndUpdate(
+			userId,
+			{
+				...updateRoot,
+    		...(Object.keys(updateProfile).length && { profile: updateProfile })
+			},
+			 { new: true }
+		);
+
+		//Validate user
+		if(!user)
+			return res.status(404).json({ message: 'User not found' });
+
+		res.json({ 
+			message: 'Profile completed',
+			 user: {
+	    	_id: user._id,
+	    	email: user.email,
+	    	firstName: user.firstName,
+	    	lastName: user.lastName,
+	    	role: user.role,
+	    	profile: {
+	      	avatar: user.profile?.avatar,
+	      	phone: user.profile?.phone,
+	      	locationArea: user.profile?.locationArea,
+	      	cityLGA: user.profile?.cityLGA,
+	      	address: user.profile?.address,
+	      	notificationChannel: user.profile?.notificationChannel
+	    	}
+			}
+		});
+
+	} catch (err) {
+		res.status(500).json({ message: err.message });
+	}
+}
 
 // GET USER PROFILE
 exports.getUserProfile = async (req, res) => {
