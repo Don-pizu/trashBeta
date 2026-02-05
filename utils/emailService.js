@@ -34,7 +34,7 @@ exports.sendOtpEmail = async (to, otp) => {
 
           <div style="background: #f0f4f8; text-align: center; padding: 15px; font-size: 12px; color: #888;">
             © ${new Date().getFullYear()} Trash Beta. All rights reserved.<br/>
-            <a href="https://onrender.com" style="color: #009900; text-decoration: none;">Visit Website</a>
+            <a href="https://trashbeta.onrender.com" style="color: #009900; text-decoration: none;">Visit Website</a>
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@ exports.forgotPassOtpEmail = async (to, otp) => {
 
           <div style="background: #f0f4f8; text-align: center; padding: 15px; font-size: 12px; color: #888;">
             © ${new Date().getFullYear()} Trash Beta. All rights reserved.<br/>
-            <a href="https://onrender.com" style="color: #009900; text-decoration: none;">Visit Website</a>
+            <a href="https://trashbeta.onrender.com" style="color: #009900; text-decoration: none;">Visit Website</a>
           </div>
         </div>
       </div>
@@ -138,7 +138,7 @@ exports.notificationEmail = async ({ to, subject, html }) => {
 
           <div style="background: #f0f4f8; text-align: center; padding: 15px; font-size: 12px; color: #888;">
             © ${new Date().getFullYear()} Trash Beta. All rights reserved.<br/>
-            <a href="https://onrender.com" style="color: #009900; text-decoration: none;">Visit Website</a>
+            <a href="https://trashbeta.onrender.com" style="color: #009900; text-decoration: none;">Visit Website</a>
           </div>
         </div>
       </div>

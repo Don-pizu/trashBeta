@@ -18,7 +18,7 @@ const options = {
         description: 'Local server',
       },
       {
-        url: 'https://-d7zh.onrender.com', // for deployment 
+        url: 'https://trashbeta.onrender.com', // for deployment 
         description: 'Production server',
       },
     ],
