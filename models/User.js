@@ -68,10 +68,10 @@ const userSchema = new mongoose.Schema({
 			required: false,
 			unique: true,
 			sparse: true,
-			minlength: 11,
-			maxlength: 11,
 			validate: {
 				validator: function (v) {
+					if (!v) return true; // allow null
+
 					// E.164 format: + and up to 15 digits
 		    		return /^\+[1-9]\d{6,14}$/.test(v); // using +234
 				},

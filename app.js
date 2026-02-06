@@ -18,6 +18,8 @@ const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./routes/authRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const integrationRoutes = require('./routes/integrationRoutes');
+const webhookRoutes = require('./routes/webhookRoutes');
 
 const { swaggerUi, swaggerSpec } = require('./swagger');
 
@@ -81,7 +83,7 @@ const allowedOrigins = [
   //'http://localhost:5000',   // If frontend serves on 5000
   //'null', //To allow frontend guys to work freely for now
   'https://trashbeta.onrender.com', //deployed backend 
-  //'https://netlify.app'  // deployed frontend  
+  'https://thrashbeta.vercel.app'  // deployed frontend  
   ]; 
 
 app.use(cors({
@@ -100,7 +102,9 @@ app.use(cors({
 
 //Routes
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v2', reportRoutes);
+app.use('/api/v1', reportRoutes);
+app.use('/api/v1', integrationRoutes);
+app.use('/api/v1', webhookRoutes);
 
 // Swagger docs route
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

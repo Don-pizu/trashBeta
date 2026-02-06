@@ -1,30 +1,6 @@
 // utils/smsService.js
 
-const twilio = require("twilio");
 
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
-
-// Send SMS OTP
-exports.notificationSMS = async ({ to, body }) => {
-  try {
-    const message = await client.messages.create({
-      body: ` TrashBeta Notification: ${body}`,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: to, // must be in E.164 format e.g. +2348012345678
-    });
-    console.log("✅ SMS OTP sent:", message.sid);
-    return true;
-  } catch (error) {
-    console.error("❌ SMS Error:", error.message);
-    return false;
-  }
-};
-
-
-/*
 const axios = require('axios');
 
 exports.notificationSMS = async ({ to, body }) => {
@@ -48,4 +24,31 @@ exports.notificationSMS = async ({ to, body }) => {
     throw new Error('SMS sending failed');
   }
 };
+
+
+/*
+
+const twilio = require("twilio");
+
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
+// Send SMS OTP
+exports.notificationSMS = async ({ to, body }) => {
+  try {
+    const message = await client.messages.create({
+      body: ` TrashBeta Notification: ${body}`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: to, // must be in E.164 format e.g. +2348012345678
+    });
+    console.log("✅ SMS OTP sent:", message.sid);
+    return true;
+  } catch (error) {
+    console.error("❌ SMS Error:", error.message);
+    return false;
+  }
+};
+
 */
