@@ -85,7 +85,7 @@ app.use('/api', limiter);
 
 // CORS configuration
 const allowedOrigins = [
-  "'self'",
+  //"'self'",
   //'http://localhost:5000',   // If frontend serves on 5000
   //'http://127.0.0.1:5500',
   //'null', //To allow frontend guys to work freely for now
