@@ -394,7 +394,7 @@ router.post ('/login', login );
 router.get ('/user/:id', protect, admin, getUserById);
 router.get ('/users', protect, requireOnboardingComplete, admin, getAllUsers);
 router.post ('/forgotPassword', forgotPassword);
-router.post ('/reset-password/:token', resetPassword);
+router.put ('/reset-password/:token', resetPassword);
 router.get ('/me', protect, requireOnboardingComplete, getUserProfile);
 
 module.exports = router;

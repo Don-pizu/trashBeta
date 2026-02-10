@@ -204,6 +204,18 @@ exports.updateProfile = async (req, res) => {
 		// Format phone number before saving
     phone = formatPhone(phone);
 
+    // Check if phone already belongs to another user
+		const phoneExists = await User.findOne({
+		  "profile.phone": phone,
+		  _id: { $ne: userId } // exclude current user
+		});
+
+		if (phoneExists) {
+	  	return res.status(400).json({ 
+	    	message: "Phone number already in use" 
+	  	});
+		}
+
     const allowedNotification = ['EMAIL', 'SMS'];
 
     if (notificationChannel && !allowedNotification.includes(notificationChannel))
@@ -275,7 +287,10 @@ exports.login = async (req, res) => {
 			return res.status(200).json({
 			    message: 'Onboarding incomplete, Kindly complete it',
 			    onboardingStep: user.onboardingStep,
-			    token: createToken(user)
+			    token: createToken(user),
+			    role: user.role,
+    			_id: user._id,
+    			email: user.email
 			});
 			
 
@@ -369,10 +384,10 @@ exports.forgotPassword = async (req, res) => {
     user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
     user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;    // 15 min
 
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
     // Build reset URL
-    const resetUrl = `https://onrender.com/api/auth/reset-password/${resetToken}`; ///////change to frontend link
+    const resetUrl = `https://thrashbeta.vercel.app/auth/new-password.html?token=${resetToken}`; ///////change to frontend link
 
     // send via email
     await forgotPassOtpEmail(user.email, `Reset your password using this link: ${resetUrl}`);
@@ -416,7 +431,7 @@ exports.resetPassword = async (req, res) => {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
 
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
     res.json({ message: "Password reset successful. You can now login." });
 

@@ -37,7 +37,10 @@ app.use(
   helmet.contentSecurityPolicy({
     useDefaults: true,
     directives: {
-      defaultSrc: ["'self'"],
+      defaultSrc: [
+        "'self'",
+        "http://localhost:5000"
+      ],
       scriptSrc: [
         "'self'",
         "https://cdn.jsdelivr.net",
@@ -51,7 +54,9 @@ app.use(
         "data:",
         "https://cdn.jsdelivr.net",   // allow worker importScripts
         "https://cdn.socket.io",
-        "http://localhost:5000",
+        //"http://localhost:5000",
+        //"http://127.0.0.1:5500",
+        //"http://localhost:5500",
         "https://trashbeta.onrender.com",
         "https://res.cloudinary.com"
       ],
@@ -80,10 +85,13 @@ app.use('/api', limiter);
 
 // CORS configuration
 const allowedOrigins = [
+  "'self'",
   //'http://localhost:5000',   // If frontend serves on 5000
+  //'http://127.0.0.1:5500',
   //'null', //To allow frontend guys to work freely for now
   'https://trashbeta.onrender.com', //deployed backend 
   'https://thrashbeta.vercel.app'  // deployed frontend  
+  //'http://localhost:5500',
   ]; 
 
 app.use(cors({

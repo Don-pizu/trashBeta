@@ -14,11 +14,11 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:5000/api', // for local development
+        url: 'http://localhost:5000/api/v1', // for local development
         description: 'Local server',
       },
       {
-        url: 'https://trashbeta.onrender.com', // for deployment 
+        url: 'https://trashbeta.onrender.com/api/v1', // for deployment 
         description: 'Production server',
       },
     ],
