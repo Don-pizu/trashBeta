@@ -7,6 +7,7 @@ const {
 		createReport, getUserReports, getReportById, 
 		getByTrackingId, getAllReports, updateStatus, updateStatusByTrackingId,
 		updatePriorityAssigned, updateAssigned, deleteReport,
+		getAssignedReports, markReportComplete
 	} = require ('../controllers/reportController');
 const { 
 		protect, admin, 
@@ -446,15 +447,18 @@ router.post('/reports', protect, requireOnboardingComplete, upload.array('images
 // Read
 router.get('/reports', protect, requireOnboardingComplete, getUserReports);
 router.get('/reports/:id', protect, requireOnboardingComplete, getReportById);
-router.get('/reports/:strackingId', protect, requireOnboardingComplete, getByTrackingId);
+router.get('/reports/track/:trackingId', protect, requireOnboardingComplete, getByTrackingId);
 router.get('/allReports', protect, requireOnboardingComplete, admin, getAllReports);
+router.get('/reports/assign/assigned', protect, getAssignedReports);
+
 
 // Update (status / assignment)
 
 router.put('/reports/id/:id/assign', protect, requireOnboardingComplete, admin, updatePriorityAssigned);
 router.put('/reports/tracking/:trackingId/assign', protect, requireOnboardingComplete, admin, updateAssigned);
 router.put('/reports/id/:id/status', protect, requireOnboardingComplete, admin, updateStatus);
-router.put('/reports/tracking/:trackingId/status', protect, requireOnboardingComplete, admin, updateStatusByTrackingId);
+router.put('/reports/tracking/:trackingId/status', protect, requireOnboardingComplete, updateStatusByTrackingId);
+router.put('/reports/:id/complete', protect, markReportComplete);
 
 
 // Delete

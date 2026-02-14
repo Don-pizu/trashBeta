@@ -541,9 +541,49 @@ exports.deleteReport = async (req, res) => {
       return res.status(404).json({ message: 'Report not found' });
 
     await redis.del('reports:all');
-    await redis.del(`report:${req.params.id}`);
+    await redis.del(`report:${req.params._id}`);
 
     res.json({ message: 'Trash report deleted' });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+
+// GET reports assigned to logged in worker
+exports.getAssignedReports = async (req, res) => {
+  try {
+
+    const reports = await Report.find({
+      assignedTo: req.user.id
+    }).sort({ createdAt: -1 });
+
+    res.json(reports);
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+exports.markReportComplete = async (req, res) => {
+  try {
+
+    const report = await Report.findById(req.params.id);
+
+    if (!report)
+      return res.status(404).json({ message: 'Report not found' });
+
+    if (report.assignedTo.toString() !== req.user._id.toString())
+      return res.status(403).json({ message: 'Not your task' });
+
+    report.status = 'COMPLETED';
+
+    await report.save();
+
+    res.json(report);
 
   } catch (err) {
     res.status(500).json({ message: err.message });

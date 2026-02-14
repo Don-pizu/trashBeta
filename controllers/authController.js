@@ -198,23 +198,23 @@ exports.updateProfile = async (req, res) => {
 			address, pickupReminder, notificationChannel
 		} = req.body;
 
-		if(!phone)
-			return res.status(400).json({ message: 'Phone number is required'});
+		if (phone) {
+			// Format phone number before saving
+	    phone = formatPhone(phone);
 
-		// Format phone number before saving
-    phone = formatPhone(phone);
+	    // Check if phone already belongs to another user
+			const phoneExists = await User.findOne({
+			  "profile.phone": phone,
+			  _id: { $ne: userId } // exclude current user
+			});
 
-    // Check if phone already belongs to another user
-		const phoneExists = await User.findOne({
-		  "profile.phone": phone,
-		  _id: { $ne: userId } // exclude current user
-		});
-
-		if (phoneExists) {
-	  	return res.status(400).json({ 
-	    	message: "Phone number already in use" 
-	  	});
+			if (phoneExists) {
+		  	return res.status(400).json({ 
+		    	message: "Phone number already in use" 
+		  	});
+			}
 		}
+		
 
     const allowedNotification = ['EMAIL', 'SMS'];
 
@@ -290,7 +290,7 @@ exports.login = async (req, res) => {
 			    token: createToken(user),
 			    role: user.role,
     			_id: user._id,
-    			email: user.email
+    			email: user.email,
 			});
 			
 
@@ -303,6 +303,9 @@ exports.login = async (req, res) => {
 				_id: user._id,
 				email: user.email,
 				role:user.role,
+				firstName: user.firstName,
+    		lastName: user.lastName,
+    		phone: user.profile?.phone,
 				token: createToken(user)
 			});
 		} else {
@@ -485,19 +488,22 @@ exports.updateUserDetails = async (req, res) => {
 		}
 
 		//find user and update
-		const user = await User.findByIdAndUpdate(
-			userId,
-			{
-				...updateRoot,
-    		...(Object.keys(updateProfile).length && { profile: updateProfile })
-			},
-			 { new: true }
-		);
+		const user = await User.findById(userId);
 
-		//Validate user
-		if(!user)
-			return res.status(404).json({ message: 'User not found' });
+		if (!user) return res.status(404).json({ message: 'User not found' });
 
+		// Merge existing profile with updates
+		user.firstName = updateRoot.firstName || user.firstName;
+		user.lastName = updateRoot.lastName || user.lastName;
+		user.role = updateRoot.role || user.role;
+
+		user.profile = {
+		  ...user.profile.toObject(),   // keep existing fields
+		  ...updateProfile              // overwrite only updated fields
+		};
+
+		await user.save();
+		
 		res.json({ 
 			message: 'Profile completed',
 			 user: {
@@ -533,8 +539,15 @@ exports.getUserProfile = async (req, res) => {
     res.json({
       _id: user._id,
       email: user.email,
-      avatar: user.profile?.avatar,
+      firstName: user.firstName,
+	    lastName: user.lastName,
       role: user.role,
+      avatar: user.profile?.avatar,
+      phone: user.profile?.phone,
+	    locationArea: user.profile?.locationArea,
+	   	cityLGA: user.profile?.cityLGA,
+	    address: user.profile?.address,
+	    notificationChannel: user.profile?.notificationChannel
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
