@@ -97,7 +97,7 @@ const userSchema = new mongoose.Schema({
 
 		notificationChannel: {
 			type: String,
-			enum: [ 'EMAIL', 'SMS' ],
+			enum: [ 'EMAIL', 'SMS', 'BOTH' ],
 			default: 'EMAIL'
 		},
 

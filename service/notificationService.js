@@ -4,43 +4,64 @@
 const { notificationEmail } = require('../utils/emailService');
 const { notificationSMS } = require('../utils/smsService');
 
-exports.notify = async ({ user, template }) => {
+exports.notify = async ({ user, template, preference }) => {
 
-   	if (!user) return;
+  if (!user) return;
 
-   	const channel = user.profile?.notificationChannel;
+  // PRIORITY ORDER:
+  // 1️⃣ Report-level preference
+  // 2️⃣ User profile default
+  // 3️⃣ Fallback to EMAIL
 
-   	try {
+  const channel = preference || user.profile?.notificationChannel || 'EMAIL';
 
-      	// SMS Preferred
-      	if (channel === 'SMS' && user.profile?.phone) {
-         	await notificationSMS({
-            	to: user.profile.phone,
-            	body: template.sms
-         	});
-         	return;
-      	}
+  try {
 
-      	// EMAIL Preferred
-      	if (channel === 'EMAIL' && user.email) {
-         	await notificationEmail({
-            	to: user.email,
-            	subject: template.email.subject,
-            	html: template.email.html
-         	});
-         	return;
-      	}
+    // ===== EMAIL ONLY =====
+    if (channel === 'EMAIL') {
+      if (user.email) {
+        await notificationEmail({
+          to: user.email,
+          subject: template.email.subject,
+          html: template.email.html
+        });
+      }
+      return;
+    }
 
-      	// FALLBACK → if preference missing
-      	if (user.email) {
-         	await notificationEmail({
-            	to: user.email,
-            	subject: template.email.subject,
-            	html: template.email.html
-         	});
-      	}
+    // ===== SMS ONLY =====
+    if (channel === 'SMS') {
+      if (user.profile?.phone) {
+        await notificationSMS({
+          to: user.profile.phone,
+          body: template.sms
+        });
+      }
+      return;
+    }
 
-   	} catch (err) {
-    	console.error('Notification failed', err.message);
-   	}
+    // ===== BOTH =====
+    if (channel === 'BOTH') {
+
+      if (user.email) {
+        await notificationEmail({
+          to: user.email,
+          subject: template.email.subject,
+          html: template.email.html
+        });
+      }
+
+      if (user.profile?.phone) {
+        await notificationSMS({
+          to: user.profile.phone,
+          body: template.sms
+        });
+      }
+
+      return;
+    }
+
+  } catch (err) {
+    console.error('Notification failed:', err.message);
+  }
 };

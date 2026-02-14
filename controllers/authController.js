@@ -306,6 +306,7 @@ exports.login = async (req, res) => {
 				firstName: user.firstName,
     		lastName: user.lastName,
     		phone: user.profile?.phone,
+    		isVerified: user.isVerified,
 				token: createToken(user)
 			});
 		} else {

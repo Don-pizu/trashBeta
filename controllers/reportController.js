@@ -14,7 +14,8 @@ exports.createReport = async (req, res) => {
 
 		const {
 			category, state, lga,
-			address, description
+			address, description,
+			notificationPreference
 		} = req.body;
 
 		if (!category || !state || !lga || !address) 
@@ -52,6 +53,7 @@ exports.createReport = async (req, res) => {
 			address,
 			description,
 			images,
+			notificationPreference: notificationPreference || 'EMAIL',
 			contactDetails: {
 		        name: `${req.user.firstName} ${req.user.lastName}`,
 		        phone: req.user.profile?.phone,
@@ -63,12 +65,14 @@ exports.createReport = async (req, res) => {
 		//Notification
 		await notify({
 			user: req.user,
-			template: Template.reportCreated(report.trackingId)
+			template: Template.reportCreated(report.trackingId),
+			preference: report.notificationPreference
 		}).catch(console.error);
 
 
 		// Invalidate list cache
-    	await redis.del('reports:all');
+    await redis.del(`reports:user:${req.user._id}`);
+
 
     	res.status(201).json({
 	      	message: 'Trash report created successfully',
@@ -303,7 +307,8 @@ exports.updatePriorityAssigned = async (req,res) => {
 		//Notification
 		await notify ({
 			user: assignee,
-			template: Template.reportAssigned(report.trackingId)
+			template: Template.reportAssigned(report.trackingId),
+			preference: report.notificationPreference
 		}).catch(console.error);
 
 		// Invalidate caches
@@ -381,7 +386,8 @@ exports.updateAssigned = async (req, res) => {
     //Notification
 		await notify ({
 			user: assignee,
-			template: Template.reportAssigned(report.trackingId)
+			template: Template.reportAssigned(report.trackingId),
+			preference: report.notificationPreference
 		}).catch(console.error);
 
     // Invalidate caches
@@ -446,7 +452,8 @@ exports.updateStatus = async (req,res) => {
 
   		await notify({
     		user: creator,
-    		template: Template.reportCompleted(report.trackingId)
+    		template: Template.reportCompleted(report.trackingId),
+    		preference: report.notificationPreference
   		}).catch(console.error);
 		}
 
@@ -511,7 +518,8 @@ exports.updateStatusByTrackingId = async (req, res) => {
 
   		await notify({
     		user: creator,
-    		template: Template.reportCompleted(report.trackingId)
+    		template: Template.reportCompleted(report.trackingId),
+    		preference: report.notificationPreference
   		}).catch(console.error);
 		}
 

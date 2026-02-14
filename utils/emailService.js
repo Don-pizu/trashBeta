@@ -17,7 +17,7 @@ exports.sendOtpEmail = async (to, otp) => {
           <div style="padding: 30px; color: #333;">
             <p style="font-size: 16px;">Hi there 👋,</p>
             <p style="font-size: 15px; line-height: 1.6;">
-              Use the verification code below to complete your registration on <strong>Tash Beta</strong>.
+              Use the verification code below to complete your registration on <strong>Trash Beta</strong>.
             </p>
 
             <div style="text-align: center; margin: 30px 0;">
@@ -34,7 +34,7 @@ exports.sendOtpEmail = async (to, otp) => {
 
           <div style="background: #f0f4f8; text-align: center; padding: 15px; font-size: 12px; color: #888;">
             © ${new Date().getFullYear()} Trash Beta. All rights reserved.<br/>
-            <a href="https://trashbeta.onrender.com" style="color: #009900; text-decoration: none;">Visit Website</a>
+            <a href="https://thrashbeta.vercel.app" style="color: #009900; text-decoration: none;">Visit Website</a>
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@ exports.forgotPassOtpEmail = async (to, otp) => {
 
           <div style="background: #f0f4f8; text-align: center; padding: 15px; font-size: 12px; color: #888;">
             © ${new Date().getFullYear()} Trash Beta. All rights reserved.<br/>
-            <a href="https://trashbeta.onrender.com" style="color: #009900; text-decoration: none;">Visit Website</a>
+            <a href="https://thrashbeta.vercel.app" style="color: #009900; text-decoration: none;">Visit Website</a>
           </div>
         </div>
       </div>
@@ -138,7 +138,7 @@ exports.notificationEmail = async ({ to, subject, html }) => {
 
           <div style="background: #f0f4f8; text-align: center; padding: 15px; font-size: 12px; color: #888;">
             © ${new Date().getFullYear()} Trash Beta. All rights reserved.<br/>
-            <a href="https://trashbeta.onrender.com" style="color: #009900; text-decoration: none;">Visit Website</a>
+            <a href="https://thrashbeta.vercel.app" style="color: #009900; text-decoration: none;">Visit Website</a>
           </div>
         </div>
       </div>
