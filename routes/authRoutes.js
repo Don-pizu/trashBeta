@@ -225,6 +225,42 @@ const { upload } = require('../middleware/upload');
 
 /**
  * @swagger
+ * /auth/profile/notify:
+ *   put:
+ *     summary: Update user profile and notification settings
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               phone:
+ *                 type: string
+ *               locationArea:
+ *                 type: string
+ *               cityLGA:
+ *                 type: string
+ *               address:
+ *                 type: string
+ *               pickupReminder:
+ *                 type: boolean
+ *               notificationChannel:
+ *                 type: string
+ *                 enum: [EMAIL, SMS, BOTH]
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ */
+
+
+/**
+ * @swagger
  * /auth/user/profile:
  *   put:
  *     summary: Update user details (admin or self)
@@ -304,7 +340,6 @@ const { upload } = require('../middleware/upload');
  *         description: Login successful
  */
 
-
 /**
  * @swagger
  * /auth/user/{id}:
@@ -317,10 +352,19 @@ const { upload } = require('../middleware/upload');
  *       - in: path
  *         name: id
  *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: User data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       404:
+ *         description: User not found
  */
+
 
 
 /**
@@ -336,14 +380,36 @@ const { upload } = require('../middleware/upload');
  *         name: page
  *         schema:
  *           type: integer
+ *         example: 1
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
+ *         example: 10
+ *       - in: query
+ *         name: email
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: Paginated users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 page:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 totalUsers:
+ *                   type: integer
  */
+
 
 
 
@@ -353,20 +419,57 @@ const { upload } = require('../middleware/upload');
  *   post:
  *     summary: Send password reset email
  *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Password reset link sent
+ *       400:
+ *         description: User not found
  */
+
 
 
 /**
  * @swagger
  * /auth/reset-password/{token}:
- *   post:
- *     summary: Reset password
+ *   put:
+ *     summary: Reset password using token
  *     tags: [Auth]
  *     parameters:
  *       - in: path
  *         name: token
  *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [password, confirmPassword]
+ *             properties:
+ *               password:
+ *                 type: string
+ *               confirmPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *       400:
+ *         description: Invalid or expired token
  */
+
 
 
 
@@ -380,8 +483,15 @@ const { upload } = require('../middleware/upload');
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: User profile
+ *         description: Logged-in user details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized
  */
+
 
 
 router.post ('/register', register);
