@@ -216,7 +216,7 @@ exports.updateProfile = async (req, res) => {
 		}
 		
 
-    const allowedNotification = ['EMAIL', 'SMS'];
+    const allowedNotification = ['EMAIL', 'SMS', 'BOTH'];
 
     if (notificationChannel && !allowedNotification.includes(notificationChannel))
     	return res.status(404).json({ message: `Allowed notification channels are: ${allowedNotification}`});
@@ -465,7 +465,8 @@ exports.updateUserDetails = async (req, res) => {
 		if (role && req.user.role !== 'admin') 
   		return res.status(403).json({ message: 'Only admin can update role' });
 		
-		const allowedNotification = ['EMAIL', 'SMS'];
+		const allowedNotification = ['EMAIL', 'SMS', 'BOTH'];
+
 		if (notificationChannel && !allowedNotification.includes(notificationChannel))
 			return res.status(404).json({ message: `Allowed notification channels are: ${allowedNotification}`});
 
@@ -553,4 +554,80 @@ exports.getUserProfile = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+//PUT  Update Profile
+//PUT  Update Profile
+exports.updateProfile2 = async (req, res) => {
+	try {
+		const userId = req.user.id;
+		const user = await User.findById(userId);
+		if (!user) return res.status(404).json({ message: 'User not found' });
+
+		let {
+			phone, locationArea, cityLGA,
+			address, pickupReminder, notificationChannel
+		} = req.body;
+
+		// Phone validation
+		if (phone) {
+			phone = formatPhone(phone);
+			const phoneExists = await User.findOne({
+				"profile.phone": phone,
+				_id: { $ne: userId }
+			});
+			if (phoneExists) {
+				return res.status(400).json({ message: "Phone number already in use" });
+			}
+			user.profile.phone = phone;
+		}
+
+		// Optional fields
+		if (locationArea) user.profile.locationArea = locationArea;
+		if (cityLGA) user.profile.cityLGA = cityLGA;
+		if (address) user.profile.address = address;
+		if (pickupReminder !== undefined) user.profile.pickupReminder = pickupReminder;
+
+		// Notification channel
+		const allowedNotification = ['EMAIL', 'SMS', 'BOTH'];
+		if (notificationChannel) {
+			if (!allowedNotification.includes(notificationChannel)) {
+				return res.status(400).json({ message: `Allowed notification channels: ${allowedNotification.join(", ")}` });
+			}
+			user.profile.notificationChannel = notificationChannel;
+		}
+
+		// Avatar upload
+		if (req.file) user.profile.avatar = req.file.path;
+
+		// Save changes
+		await user.save();
+
+		res.json({
+			message: 'Profile updated successfully',
+			user: {
+				_id: user._id,
+				email: user.email,
+				avatar: user.profile?.avatar,
+				role: user.role,
+				notificationChannel: user.profile?.notificationChannel
+			}
+		});
+
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ message: err.message });
+	}
 };

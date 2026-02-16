@@ -7,7 +7,7 @@ const {
 		createReport, getUserReports, getReportById, 
 		getByTrackingId, getAllReports, updateStatus, updateStatusByTrackingId,
 		updatePriorityAssigned, updateAssigned, deleteReport,
-		getAssignedReports, markReportComplete
+		getAssignedReports, markReportComplete, getReportStats
 	} = require ('../controllers/reportController');
 const { 
 		protect, admin, 
@@ -450,7 +450,7 @@ router.get('/reports/:id', protect, requireOnboardingComplete, getReportById);
 router.get('/reports/track/:trackingId', protect, requireOnboardingComplete, getByTrackingId);
 router.get('/allReports', protect, requireOnboardingComplete, admin, getAllReports);
 router.get('/reports/assign/assigned', protect, getAssignedReports);
-
+router.get('/stats', protect, admin, getReportStats);
 
 // Update (status / assignment)
 

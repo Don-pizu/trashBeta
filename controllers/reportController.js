@@ -597,3 +597,52 @@ exports.markReportComplete = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+
+// GET REPORT STATS (Admin)
+exports.getReportStats = async (req, res) => {
+  try {
+
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    // This month reports
+    const thisMonthReports = await Report.countDocuments({
+      createdAt: { $gte: startOfThisMonth }
+    });
+
+    // Last month reports
+    const lastMonthReports = await Report.countDocuments({
+      createdAt: {
+        $gte: startOfLastMonth,
+        $lt: startOfThisMonth
+      }
+    });
+
+    const percentChange = lastMonthReports === 0
+      ? 100
+      : (((thisMonthReports - lastMonthReports) / lastMonthReports) * 100).toFixed(1);
+
+    const totalActive = await Report.countDocuments({
+      status: { $in: ['PENDING', 'ASSIGNED', 'IN_PROGRESS'] }
+    });
+
+    const pending = await Report.countDocuments({ status: 'PENDING' });
+
+    const inProgress = await Report.countDocuments({ status: 'IN_PROGRESS' });
+
+    res.json({
+      totalActive,
+      thisMonthReports,
+      lastMonthReports,
+      percentChange,
+      pending,
+      inProgress
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

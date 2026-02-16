@@ -388,13 +388,16 @@ router.post ('/register', register);
 router.post ('/verifyOtp', verifyOtp);
 router.post ('/resendOtp', resendOtp);
 router.put ('/role', protect, updateRole);
-router.put ('/profile', protect, blockIfProfileCompleted, upload.single('avatar'), updateProfile);
+
+
 router.put ('/user/profile', protect, requireOnboardingComplete, upload.single('avatar'), updateUserDetails);
 router.post ('/login', login );
 router.get ('/user/:id', protect, admin, getUserById);
 router.get ('/users', protect, requireOnboardingComplete, admin, getAllUsers);
 router.post ('/forgotPassword', forgotPassword);
 router.put ('/reset-password/:token', resetPassword);
-router.get ('/me', protect, requireOnboardingComplete, getUserProfile);
+router.get ('/me', protect,  getUserProfile);
+
+router.put ('/profile/notify', protect, upload.single('avatar'), updateProfile);
 
 module.exports = router;
