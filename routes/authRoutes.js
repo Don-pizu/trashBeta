@@ -499,6 +499,7 @@ router.post ('/verifyOtp', verifyOtp);
 router.post ('/resendOtp', resendOtp);
 router.put ('/role', protect, updateRole);
 
+router.put ('/profile/profile', protect, blockIfProfileCompleted, upload.single('avatar'), updateProfile);
 
 router.put ('/user/profile', protect, requireOnboardingComplete, upload.single('avatar'), updateUserDetails);
 router.post ('/login', login );
