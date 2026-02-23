@@ -8,58 +8,83 @@ const { sendOtpEmail, forgotPassOtpEmail } = require('../utils/emailService');
 const cloudinary = require('../config/cloudinary');
 const fs = require('fs')
 const {formatPhone } = require('../utils/phoneFormatter');
-
+const validator = require('validator');
 
 //POST 		Register a new user
+//POST Register a new user
 exports.register = async (req, res) => {
-	try {
+  try {
 
-		const { firstName, lastName, email, password, confirmPassword } = req.body;
+    const { firstName, lastName, email, password, confirmPassword } = req.body;
 
-		if (!firstName || !lastName || !email || !password || !confirmPassword)
-			return res.status(400).json({ message: 'All the fields are required' });
+    // Required fields validation
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
 
-		//Check if passwords match
-		const cleanPassword = String(password).trim();
-		const cleanConfirmPassword = String(confirmPassword).trim();
+    // Normalize email
+    const emailNormalized = String(email).toLowerCase().trim();
 
-		if (cleanPassword !== cleanConfirmPassword)
-			return res.status(400).json({ message: 'Passwords do not match' });
+    // Password normalization
+    const cleanPassword = String(password).trim();
+    const cleanConfirmPassword = String(confirmPassword).trim();
 
-		//check for existing email
-		const eExists = await User.findOne ({ email: email });
-		if(eExists)
-			return res.status(400).json({ message: 'Email already exists' });
+    // Password match validation
+    if (cleanPassword !== cleanConfirmPassword) {
+      return res.status(400).json({ message: 'Passwords do not match' });
+    }
 
-		//Generate 4 digit OTP
-		const otp = Math.floor(1000 + Math.random() * 9000).toString();
-		const otpExpires = new Date(Date.now() + 10 * 60 * 1000);             // 10 min
+    // Email format validation
+    if (!validator.isEmail(emailNormalized)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
 
+    // Duplicate email check
+    const existingUser = await User.findOne({
+      email: emailNormalized
+    });
 
-		//create user database
-		const user = await User.create({
-			firstName,
-			lastName,
-			email,
-			password,
-			otp,
-			otpExpires
-		});
+    if (existingUser) {
+      return res.status(400).json({
+        message: 'Email already exists'
+      });
+    }
 
+    // OTP generation
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
-		//send OTP
-		await sendOtpEmail(email, otp);
+    // Create user
+    const user = await User.create({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: emailNormalized,
+      password: cleanPassword,
+      otp,
+      otpExpires
+    });
 
+    await sendOtpEmail(user.email, otp);
 
-		res.status(201).json({
-			message: `User registered. Verify OTP sent to ${user.email}`,
-			_id: user._id,
-	      	email: user.email,
-		})
+    return res.status(201).json({
+      message: `User registered. Verify OTP sent to ${user.email}`,
+      _id: user._id,
+      email: user.email
+    });
 
-	} catch (err) {
-		res.status(500).json({ message: err.message})
-	}
+  } catch (err) {
+
+    if (err.code === 11000) {
+      return res.status(400).json({
+        message: "Email already exists"
+      });
+    }
+
+    return res.status(500).json({
+      message: "Server error",
+      error: err.message
+    });
+  }
 };
 
 
@@ -152,10 +177,10 @@ exports.updateRole = async (req, res) => {
 		const { role } = req.body;
 
 		//Allowed role
-		const allowedRole = ['resident', 'staff', 'admin'];
+		const allowedRole = ['resident', 'staff'];
 
 		if (!allowedRole.includes(role))
-			return res.status(404).json({ message: 'Role must be resident, staff or admin'});
+			return res.status(404).json({ message: 'Role is not allowed'});
 
 		const user = await User.findByIdAndUpdate(
 			userId,
@@ -219,7 +244,7 @@ exports.updateProfile = async (req, res) => {
     const allowedNotification = ['EMAIL', 'SMS', 'BOTH'];
 
     if (notificationChannel && !allowedNotification.includes(notificationChannel))
-    	return res.status(404).json({ message: `Allowed notification channels are: ${allowedNotification}`});
+    	return res.status(404).json({ message: 'Invalid Notification Channel'});
 
 		if( req.user.onboardingStep === 'PROFILE_COMPLETED' )
 			return res.status(404).json({ message: 'User has completed the onboarding' });
@@ -272,15 +297,23 @@ exports.login = async (req, res) => {
 		const { email, password } = req.body;
 
     if(!email || !password)
-      return res.status(400).json({ messag: "Email and Password are required" });
+      return res.status(400).json({ message: "Email and Password are required" });
 
 		//check for User using email 
-		const user = await User.findOne({ email: email });
+		//const user = await User.findOne({ email: email });
+		const emailNormalized = String(email).toLowerCase().trim();
+		const user = await User.findOne({ email: emailNormalized });
+
 		if(!user)
-			return res.status(401).json({message: 'User is not found, Kindly check the email you entered'});
+			return res.status(401).json({message: 'Invalid Credentials'});
 
 		if (!user.isVerified) 
 		  return res.status(401).json({ message: "Please verify your account first" });
+
+		//Password check
+		const userPassword = await user.matchPassword(password);
+		if(!userPassword)
+			return res.status(401).json({message: 'Incorrect password'});
 
 		//check for completed onboarding
 		if (user.onboardingStep !== 'PROFILE_COMPLETED') 
@@ -294,9 +327,7 @@ exports.login = async (req, res) => {
 			});
 			
 
-		const userPassword = await user.matchPassword(password);
-		if(!userPassword)
-			return res.status(401).json({message: 'Incorrect password'});
+		
 
 		if ( user && userPassword ) {
 			res.json({
@@ -457,7 +488,7 @@ exports.updateUserDetails = async (req, res) => {
 					} = req.body;
 
 		//Allowed role
-		const allowedRole = ['resident', 'staff', 'admin'];
+		const allowedRole = ['resident', 'staff' ];
 
 		if (role && !allowedRole.includes(role))
 			return res.status(404).json({ message: 'Role is not allowed'});
@@ -468,7 +499,7 @@ exports.updateUserDetails = async (req, res) => {
 		const allowedNotification = ['EMAIL', 'SMS', 'BOTH'];
 
 		if (notificationChannel && !allowedNotification.includes(notificationChannel))
-			return res.status(404).json({ message: `Allowed notification channels are: ${allowedNotification}`});
+			return res.status(404).json({ message: 'Invalid Notification Channel'});
 
 		
 
@@ -604,7 +635,7 @@ exports.updateProfile2 = async (req, res) => {
 		const allowedNotification = ['EMAIL', 'SMS', 'BOTH'];
 		if (notificationChannel) {
 			if (!allowedNotification.includes(notificationChannel)) {
-				return res.status(400).json({ message: `Allowed notification channels: ${allowedNotification.join(", ")}` });
+				return res.status(400).json({ message: 'Invalid Notification Channel'});
 			}
 			user.profile.notificationChannel = notificationChannel;
 		}
@@ -631,3 +662,4 @@ exports.updateProfile2 = async (req, res) => {
 		res.status(500).json({ message: err.message });
 	}
 };
+

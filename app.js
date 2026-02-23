@@ -17,7 +17,8 @@ const http = require ('http');
 const cors = require("cors");
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-
+const sanitize = require('mongo-sanitize');
+const xss = require('xss-clean');
 
 const authRoutes = require('./routes/authRoutes');
 const reportRoutes = require('./routes/reportRoutes');
@@ -76,6 +77,34 @@ app.use(
 );
 
 
+
+//mongo-sanitize
+app.use((req, res, next) => {
+  if (req.body) req.body = sanitize(req.body);
+  if (req.query) req.query = sanitize(req.query);
+  if (req.params) req.params = sanitize(req.params);
+
+  next();
+});
+
+
+
+//xss-clean Security sanitization middleware (SAFE VERSION)
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    Object.keys(req.body).forEach(key => {
+      if (typeof req.body[key] === 'string') {
+        req.body[key] = req.body[key].trim();
+      }
+    });
+  }
+
+  next();
+});
+
+
+
+
 //ratelimit
 const limiter = rateLimit({ 
 windowMs: 15 * 60 * 1000, // 15 minutes 
@@ -88,7 +117,6 @@ app.use('/api', limiter);
 
 // CORS configuration
 const allowedOrigins = [
-  //"'self'",
   //'http://localhost:5000',   // If frontend serves on 5000
   //'http://127.0.0.1:5500',
   //'null', //To allow frontend guys to work freely for now
