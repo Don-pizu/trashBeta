@@ -81,7 +81,7 @@ This project focuses on building a scalable and secure backend architecture that
 
 ## Project Structure
 
-vephla-productivity-suite/
+trashBeta/
 │
 ├── src/
 │   ├── config/
@@ -89,12 +89,15 @@ vephla-productivity-suite/
 │   ├── middlewares/
 │   ├── models/
 │   ├── routes/
+│   ├── service/
 │   └── utils/
 │
 │
 ├── .env.example
 ├── .gitignore
+├── app.js
 ├── server.js
+├── swagger.js
 ├── README.md
 └── package.json
 
